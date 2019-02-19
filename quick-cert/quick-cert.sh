@@ -22,6 +22,7 @@ if [[ $# -lt 1 ]]; then
     exit
 fi
 
+mkdir -p ${CERTS_DIR}
 
 # Generate a self signed certificate
 # The Cert is generated for common name "0.0.0.0"

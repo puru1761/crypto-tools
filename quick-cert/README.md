@@ -45,8 +45,21 @@ Shrouded Keybag: pbeWithSHA1And3-KeyTripleDES-CBC, Iteration 2048
 
 ```
 
-User is prompted for an import and export password
+User is prompted for an import and export password. The result is a directory
+created in the current working directory as follows:
+```
+$ ls -l
+total 4
+drwxrwxr-x 2 puruk puruk 4096 Feb 18 18:17 1.1.1.1.certs
 
+$ tree 1.1.1.1.certs/
+1.1.1.1.certs/
+├── 1.1.1.1.key
+├── 1.1.1.1.p12
+└── 1.1.1.1.pem
+
+0 directories, 3 files
+```
 
 ## Author(s):
 
