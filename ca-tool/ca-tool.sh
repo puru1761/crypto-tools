@@ -26,14 +26,15 @@ usage: ${EXE} CMD [CMD_ARGS]
 
 COMMANDS:
 ~~~~~~~~~
-root-ca					Generate Root Certificate Authority
+root-ca                                         Generate Root Certificate Authority
 
-ca-cert CA_NAME [TRUST_CHAIN]		Generate an Intermediate CA for CA_NAME
-					optional: add trust root for nested CAs
+ca-cert CA_NAME [TRUST_CHAIN]                   Generate an Intermediate CA for CA_NAME
+                                                optional: add trust root for nested CAs
 
-keypair COMMON_NAME TRUST_CHAIN [p12]	Generate a Keypair for COMMON_NAME
-					option: p12 to generate pkcs12 archive
-					args: TRUST_CHAIN for nested CAs
+keypair COMMON_NAME TRUST_CHAIN [p12]           Generate a Keypair for COMMON_NAME
+client-keypair COMMON_NAME TRUST_CHAIN [p12]    Generate a client keypair for COMMON_NAME
+                                                option: p12 to generate pkcs12 archive
+                                                args: TRUST_CHAIN for nested CAs
 
 Examples:
 ---------
@@ -447,6 +448,7 @@ gen_keypair() {
 
 	COMMON_NAME=$1
 	TRUST_ROOT=$2
+    CERT_TYPE=$3
 	
 	CERTS_DIR=${ROOT_CA_DIR}/${TRUST_ROOT}
 	PWD_CERTS_DIR="${PWD}/${COMMON_NAME}_certs"
@@ -493,11 +495,18 @@ gen_keypair() {
 	sudo chown ${USER}:${GROUP} ${PWD_CERTS_DIR}/tmp/${COMMON_NAME}_csr.pem
 	sudo chmod 444 ${PWD_CERTS_DIR}/tmp/${COMMON_NAME}_csr.pem
 
+    # decide what type of cert we are generating
+    if [[ "${CERT_TYPE}" == "client" ]]; then
+        CERT_EXT="usr_cert"
+    else
+        CERT_EXT="server_cert"
+    fi
+
 	# Sign the request from Device with your Trusted CA
 	# Use the extension server_cert from the Trusted CA's openssl.cnf
 	sudo openssl ca \
 		-config ${CERTS_DIR}/openssl.cnf \
-		-extensions server_cert \
+		-extensions "${CERT_EXT}" \
 		-days 375 \
 		-notext \
 		-md sha256 \
@@ -565,7 +574,7 @@ fi
 case "$1" in
     
     # Generate a server Certificate/Key Pair
-	keypair)
+	*keypair)
 		if [[ $# -lt 2 ]]; then
 			echo "error(keypair): 'COMMON_NAME' required"
 			exit 1
@@ -576,7 +585,11 @@ case "$1" in
 			exit 1
 		fi
 
-		gen_keypair $2 $3
+        if [[ $1 == "client-keypair" ]]; then
+            gen_keypair $2 $3 "client"
+        else
+            gen_keypair $2 $3 "server"
+        fi
 		echo "Generated Certificate/Key Pair for '$2'"
 		echo "using trust chain '$3'"
 
